@@ -12,17 +12,17 @@ export default async function wtnsCalculate(input, wasmFileName, wtnsFileName, o
     const wasm = await fdWasm.read(fdWasm.totalSize);
     await fdWasm.close();
     const endWasmRead = Date.now()
-    console.log("wasm read duration:", (endWasmRead - startWasmRead) / 1000);
+    console.log("\twasm read duration:", (endWasmRead - startWasmRead) / 1000);
 
     const startWCBuilder = Date.now()
     const wc = await WitnessCalculatorBuilder(wasm);
     const endWCBuilder = Date.now()
-    console.log("WitnessCalculatorBuilder duration:", (endWCBuilder - startWCBuilder) / 1000);
+    console.log("\tWitnessCalculatorBuilder duration:", (endWCBuilder - startWCBuilder) / 1000);
 
     const startCalc = Date.now()
     const w = await wc.calculateBinWitness(input);
     const endCalc = Date.now()
-    console.log("calculateBinWitness duration:", (endCalc - startCalc) / 1000);
+    console.log("\tcalculateBinWitness duration:", (endCalc - startCalc) / 1000);
 
     const startWrite = Date.now()
     const fdWtns = await binFileUtils.createBinFile(wtnsFileName, "wtns", 2, 2);
@@ -30,6 +30,6 @@ export default async function wtnsCalculate(input, wasmFileName, wtnsFileName, o
     await wtnsUtils.writeBin(fdWtns, w, wc.prime);
     await fdWtns.close();
     const endWrite = Date.now()
-    console.log("witness write duration:", (endWrite - startWrite) / 1000);
+    console.log("\twitness write duration:", (endWrite - startWrite) / 1000);
 
 }
