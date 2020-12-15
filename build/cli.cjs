@@ -6450,17 +6450,30 @@ const { WitnessCalculatorBuilder } = circomRuntime;
 
 async function wtnsCalculate(input, wasmFileName, wtnsFileName, options) {
 
+    const startWasmRead = Date.now();
     const fdWasm = await readExisting$4(wasmFileName);
     const wasm = await fdWasm.read(fdWasm.totalSize);
     await fdWasm.close();
+    const endWasmRead = Date.now();
+    console.log("wasm read duration:", (endWasmRead - startWasmRead) / 1000);
 
+    const startWCBuilder = Date.now();
     const wc = await WitnessCalculatorBuilder(wasm);
-    const w = await wc.calculateBinWitness(input);
+    const endWCBuilder = Date.now();
+    console.log("WitnessCalculatorBuilder duration:", (endWCBuilder - startWCBuilder) / 1000);
 
+    const startCalc = Date.now();
+    const w = await wc.calculateBinWitness(input);
+    const endCalc = Date.now();
+    console.log("calculateBinWitness duration:", (endCalc - startCalc) / 1000);
+
+    const startWrite = Date.now();
     const fdWtns = await createBinFile(wtnsFileName, "wtns", 2, 2);
 
     await writeBin(fdWtns, w, wc.prime);
     await fdWtns.close();
+    const endWrite = Date.now();
+    console.log("witness write duration:", (endWrite - startWrite) / 1000);
 
 }
 

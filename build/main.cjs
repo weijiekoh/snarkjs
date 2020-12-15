@@ -1691,8 +1691,15 @@ async function wtnsCalculate(input, wasmFileName, wtnsFileName, options) {
     const wasm = await fdWasm.read(fdWasm.totalSize);
     await fdWasm.close();
 
+    const startWCBuilder = Date.now();
     const wc = await WitnessCalculatorBuilder(wasm);
+    const endWCBuilder = Date.now();
+    console.log("WitnessCalculatorBuilder duration:", (endWCBuilder - startWCBuilder) / 1000);
+
+    const startCalc = Date.now();
     const w = await wc.calculateBinWitness(input);
+    const endCalc = Date.now();
+    console.log("calculateBinWitness duration:", (endCalc - startCalc) / 1000);
 
     const fdWtns = await createBinFile(wtnsFileName, "wtns", 2, 2);
 
