@@ -8,3 +8,4 @@ export {default as beacon} from "./powersoftau_beacon.js";
 export {default as contribute} from "./powersoftau_contribute.js";
 export {default as preparePhase2} from "./powersoftau_preparephase2.js";
 export {default as exportJson} from "./powersoftau_export_json.js";
+export {default as exportHex} from "./powersoftau_export_hex.js";

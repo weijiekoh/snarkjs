@@ -109,6 +109,13 @@ const commands = [
         action: powersOfTawExportJson
     },
     {
+        cmd: "powersoftau export hex <powersoftau_0000.ptau> <powersoftau_0000.hex>",
+        description: "Exports G1 and G2 points to a file containing their hexstrings",
+        alias: ["pteh"],
+        options: "-verbose|v",
+        action: powersOfTawExportHex
+    },
+    {
         cmd: "r1cs info [circuit.r1cs]",
         description: "Print statistiscs of a circuit",
         alias: ["ri", "info -r|r1cs:circuit.r1cs"],
@@ -745,6 +752,22 @@ async function powersOfTawExportJson(params, options) {
 
     const S = JSON.stringify(stringifyBigInts(pTau), null, 1);
     await fs.promises.writeFile(jsonName, S);
+
+}
+
+// powersoftau export hex <powersoftau_0000.ptau> <powersoftau_0000.hex>",
+async function powersOfTawExportHex(params, options) {
+    let ptauName;
+    let outputFilename;
+
+    ptauName = params[0];
+    outputFilename = params[1];
+
+    if (options.verbose) Logger.setLogLevel("DEBUG");
+
+    const s = await powersOfTaw.exportHex(ptauName, logger);
+
+    await fs.promises.writeFile(outputFilename, s);
 
 }
 
