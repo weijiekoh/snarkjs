@@ -58,10 +58,18 @@ export default async function groth16Prove(zkeyFileName, witnessFileName, logger
     if (logger) logger.debug("Reading Coeffs");
     const buffCoeffs = await binFileUtils.readSection(fdZKey, sectionsZKey, 4);
 
+    let start = Date.now();
+
     if (logger) logger.debug("Building ABC");
     const [buffA_T, buffB_T, buffC_T] = await buildABC1(curve, zkey, buffWitness, buffCoeffs, logger);
 
+    let end = Date.now();
+    let abcTime = end - start;
+    console.log(`Building ABC took ${abcTime} ms`);
+
     const inc = power == Fr.s ? curve.Fr.shift : curve.Fr.w[power+1];
+
+    start = Date.now();
 
     const buffA = await Fr.ifft(buffA_T, "", "", logger, "IFFT_A");
     const buffAodd = await Fr.batchApplyKey(buffA, Fr.e(1), inc);
@@ -75,30 +83,64 @@ export default async function groth16Prove(zkeyFileName, witnessFileName, logger
     const buffCodd = await Fr.batchApplyKey(buffC, Fr.e(1), inc);
     const buffCodd_T = await Fr.fft(buffCodd, "", "", logger, "FFT_C");
 
+    end = Date.now();
+    let fftTime = end - start;
+    console.log(`3 IFFTs and FFTs took ${fftTime} ms`);
+
     if (logger) logger.debug("Join ABC");
     const buffPodd_T = await joinABC(curve, zkey, buffAodd_T, buffBodd_T, buffCodd_T, logger);
 
     let proof = {};
 
+    start = Date.now();
+
     if (logger) logger.debug("Reading A Points");
     const buffBasesA = await binFileUtils.readSection(fdZKey, sectionsZKey, 5);
     proof.pi_a = await curve.G1.multiExpAffine(buffBasesA, buffWitness, logger, "multiexp A");
+
+    end = Date.now();
+    let aMsmTime = end - start;
+    console.log(`multiexp A took ${aMsmTime} ms`);
+
+    start = Date.now();
 
     if (logger) logger.debug("Reading B1 Points");
     const buffBasesB1 = await binFileUtils.readSection(fdZKey, sectionsZKey, 6);
     let pib1 = await curve.G1.multiExpAffine(buffBasesB1, buffWitness, logger, "multiexp B1");
 
+    end = Date.now();
+    let b1MsmTime = end - start;
+    console.log(`multiexp B1 took ${b1MsmTime} ms`);
+
+    start = Date.now();
+
     if (logger) logger.debug("Reading B2 Points");
     const buffBasesB2 = await binFileUtils.readSection(fdZKey, sectionsZKey, 7);
     proof.pi_b = await curve.G2.multiExpAffine(buffBasesB2, buffWitness, logger, "multiexp B2");
+
+    end = Date.now();
+    let b2MsmTime = end - start;
+    console.log(`multiexp B2 took ${b2MsmTime} ms`);
+
+    start = Date.now();
 
     if (logger) logger.debug("Reading C Points");
     const buffBasesC = await binFileUtils.readSection(fdZKey, sectionsZKey, 8);
     proof.pi_c = await curve.G1.multiExpAffine(buffBasesC, buffWitness.slice((zkey.nPublic+1)*curve.Fr.n8), logger, "multiexp C");
 
+    end = Date.now();
+    let cMsmTime = end - start;
+    console.log(`multiexp C took ${cMsmTime} ms`);
+
+    start = Date.now();
+
     if (logger) logger.debug("Reading H Points");
     const buffBasesH = await binFileUtils.readSection(fdZKey, sectionsZKey, 9);
     const resH = await curve.G1.multiExpAffine(buffBasesH, buffPodd_T, logger, "multiexp H");
+
+    end = Date.now();
+    let hMsmTime = end - start;
+    console.log(`multiexp H took ${hMsmTime} ms`);
 
     const r = curve.Fr.random();
     const s = curve.Fr.random();
@@ -140,7 +182,16 @@ export default async function groth16Prove(zkeyFileName, witnessFileName, logger
     proof = stringifyBigInts(proof);
     publicSignals = stringifyBigInts(publicSignals);
 
-    return {proof, publicSignals};
+    const timings = {
+        msmA: aMsmTime,
+        msmB1: b1MsmTime,
+        msmB2: b2MsmTime,
+        msmC: cMsmTime,
+        msmH: hMsmTime,
+        abc: abcTime,
+    };
+
+    return {proof, publicSignals, timings};
 }
 
 
