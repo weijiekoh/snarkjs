@@ -132,10 +132,10 @@ export default async function groth16Prove(zkeyFileName, witnessFileName, logger
     let cMsmTime = end - start;
     console.log(`multiexp C took ${cMsmTime} ms`);
 
-    start = Date.now();
 
     if (logger) logger.debug("Reading H Points");
     const buffBasesH = await binFileUtils.readSection(fdZKey, sectionsZKey, 9);
+    start = Date.now();
     const resH = await curve.G1.multiExpAffine(buffBasesH, buffPodd_T, logger, "multiexp H");
 
     end = Date.now();
